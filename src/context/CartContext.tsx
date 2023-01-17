@@ -6,7 +6,7 @@ import productContext from "./ProductContext";
 
 function createCartContext() {
 	const { getProduct } = productContext;
-	const [cartItems, setCartItems] = createSignal<CartItem[]>();
+	const [cartItems, setCartItems] = createSignal<CartItem[]>([]);
 
 	const loadCart = server$(async () => {
 		const cartItems = await prisma.cartItem.findMany({ where: { status: true } });
