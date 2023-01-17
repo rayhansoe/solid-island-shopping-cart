@@ -12,7 +12,7 @@ export default function ProductCart(props: ProductCartProps) {
 		handleDecreaseCartItem,
 		handleIncreaseCartItem,
 		handleRemoveCartItem,
-		handleSetCartItemQuantity,
+		handleSetCartItemQuantityByProductId,
 	} = CartContext;
 	return (
 		<>
@@ -94,7 +94,7 @@ export default function ProductCart(props: ProductCartProps) {
 								class='custom-input-number text-center flex items-center justify-center'
 								value={cartItems()?.find((item) => item.productId === props.id)?.quantity || 0}
 								onInput={(e) => {
-									handleSetCartItemQuantity(props.id, parseInt(e.currentTarget.value));
+									handleSetCartItemQuantityByProductId(props.id, parseInt(e.currentTarget.value));
 									e.currentTarget.value = String(
 										cartItems()?.find((item) => item.productId === props.id)?.quantity
 									);

@@ -18,8 +18,7 @@ export default function CartList(props: CartListProps) {
 		handleIncreaseCartItem,
 		handleDecreaseCartItem,
 		handleRemoveCartItem,
-		handleSetCartItemQuantity,
-		getCartItem,
+		handleSetCartItemQuantityByCartItemId,
 	} = CartContext;
 
 	const [productsData] = createResource<Product[]>(
@@ -166,12 +165,14 @@ export default function CartList(props: CartListProps) {
 													class='custom-input-number text-xs text-center flex items-center justify-center sm:text-lg'
 													value={item.quantity || 0}
 													onInput={async (e) => {
-														await handleSetCartItemQuantity(
+														await handleSetCartItemQuantityByCartItemId(
 															item.id,
 															parseInt(e.currentTarget.value)
 														);
-														e.currentTarget.value = String(getCartItem(item.id)?.quantity);
 														await refetch();
+														e.currentTarget.value = String(
+															cartItemsData()?.find((cartItem) => cartItem.id === item.id)?.quantity
+														);
 													}}
 													size={String(item.quantity || 0).length}
 													type='number'

@@ -66,11 +66,13 @@ function createCartContext() {
 		await prisma.cartItem.delete({ where: { id: item?.id } });
 	});
 
-	const setCartItemQuantity = server$(async (data: { id: string; quantity: number }) => {
+	const setCartItemQuantityByProductId = server$(async (data: { id: string; quantity: number }) => {
 		const product = await prisma.product.findUnique({ where: { id: data.id } });
 		const item = await prisma.cartItem.findFirst({
 			where: { productId: data.id },
 		});
+		console.log(product?.name);
+		console.log(item?.quantity);
 
 		if (Number.isNaN(data.quantity)) {
 			await prisma.cartItem.update({
@@ -108,6 +110,52 @@ function createCartContext() {
 		}
 	});
 
+	const setCartItemQuantityByCartItemId = server$(
+		async (data: { id: string; quantity: number }) => {
+			const item = await prisma.cartItem.findUnique({
+				where: { id: data.id },
+			});
+			const product = await prisma.product.findUnique({ where: { id: item?.productId } });
+			console.log(product?.name);
+			console.log(item?.quantity);
+
+			if (Number.isNaN(data.quantity)) {
+				await prisma.cartItem.update({
+					where: { id: item?.id },
+					data: { updatedAt: new Date(), quantity: item?.quantity },
+				});
+			} else if (typeof data.quantity === "number") {
+				if (item && product) {
+					if (data.quantity === 0) {
+						await prisma.cartItem.delete({ where: { id: item?.id } });
+					}
+					if (product.stock < data.quantity) {
+						await prisma.cartItem.update({
+							where: { id: item?.id },
+							data: { updatedAt: new Date(), quantity: product.stock },
+						});
+					} else {
+						await prisma.cartItem.update({
+							where: { id: item?.id },
+							data: { updatedAt: new Date(), quantity: data.quantity },
+						});
+					}
+				} else {
+					await prisma.cartItem.create({
+						data: {
+							quantity: 1,
+							createdAt: new Date(),
+							updatedAt: new Date(),
+							isChecked: true,
+							status: true,
+							productId: data.id,
+						},
+					});
+				}
+			}
+		}
+	);
+
 	const handleIncreaseCartItem = async (id: string) => {
 		await increaseCartItem(id);
 		setCartItems(await loadCart());
@@ -126,8 +174,14 @@ function createCartContext() {
 		data && setCartItems(data);
 	};
 
-	const handleSetCartItemQuantity = async (id: string, quantity: number) => {
-		await setCartItemQuantity({ id, quantity });
+	const handleSetCartItemQuantityByProductId = async (id: string, quantity: number) => {
+		await setCartItemQuantityByProductId({ id, quantity });
+		const data = await loadCart();
+		data && setCartItems(data);
+	};
+
+	const handleSetCartItemQuantityByCartItemId = async (id: string, quantity: number) => {
+		await setCartItemQuantityByCartItemId({ id, quantity });
 		const data = await loadCart();
 		data && setCartItems(data);
 	};
@@ -156,7 +210,8 @@ function createCartContext() {
 		increaseCartItem,
 		handleDecreaseCartItem,
 		handleRemoveCartItem,
-		handleSetCartItemQuantity,
+		handleSetCartItemQuantityByCartItemId,
+		handleSetCartItemQuantityByProductId,
 		getCartQuantity,
 		getCartItem,
 		getCartItemQuantity,
