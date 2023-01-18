@@ -9,11 +9,12 @@ import ProductContext from "~/context/ProductContext";
 import StoreSection from "~/components/StoreSection";
 
 export function routeData() {
-	const productsData = createServerData$(
+	const { setProducts } = ProductContext;
+	const { setCartItems } = CartContext;
+
+	const products = createServerData$(
 		async () => {
-			const { setProducts } = ProductContext;
 			const data = await prisma.product.findMany();
-			data && setProducts(data);
 
 			return data;
 		},
@@ -22,11 +23,9 @@ export function routeData() {
 		}
 	);
 
-	const cartItemsData = createServerData$(
+	const cartItems = createServerData$(
 		async () => {
-			const { setCartItems } = CartContext;
 			const data = await prisma.cartItem.findMany();
-			data && setCartItems(data);
 
 			return data;
 		},
@@ -35,7 +34,13 @@ export function routeData() {
 		}
 	);
 
-	return { productsData, cartItemsData };
+	const cartItemsData = cartItems();
+	const productsData = products();
+
+	cartItemsData && setCartItems(cartItemsData);
+	productsData && setProducts(productsData);
+
+	return { products, cartItems };
 }
 
 const App: VoidComponent = () => {
@@ -48,7 +53,7 @@ const App: VoidComponent = () => {
 				<div class='flex items-center gap-2'>
 					<h1 class='text-3xl font-semibold p-3'>Store</h1>
 				</div>
-				<Show when={data.cartItemsData() && data.productsData()}>
+				<Show when={data.cartItems() && data.products()}>
 					<StoreSection />
 				</Show>
 			</main>

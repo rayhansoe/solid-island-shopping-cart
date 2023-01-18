@@ -8,11 +8,11 @@ import ProductContext from "~/context/ProductContext";
 import CartPage from "~/components/CartPage";
 
 export function routeData() {
-	const productsData = createServerData$(
+	const { setProducts } = ProductContext;
+	const { setCartItems } = CartContext;
+	const products = createServerData$(
 		async () => {
-			const { setProducts } = ProductContext;
 			const data = await prisma.product.findMany();
-			data && setProducts(data);
 
 			return data;
 		},
@@ -21,11 +21,9 @@ export function routeData() {
 		}
 	);
 
-	const cartItemsData = createServerData$(
+	const cartItems = createServerData$(
 		async () => {
-			const { setCartItems } = CartContext;
 			const data = await prisma.cartItem.findMany();
-			data && setCartItems(data);
 
 			return data;
 		},
@@ -34,7 +32,13 @@ export function routeData() {
 		}
 	);
 
-	return { productsData, cartItemsData };
+	const cartItemsData = cartItems();
+	const productsData = products();
+
+	cartItemsData && setCartItems(cartItemsData);
+	productsData && setProducts(productsData);
+
+	return { products, cartItems };
 }
 
 function cart() {
@@ -47,8 +51,8 @@ function cart() {
 				<div class='flex items-center gap-2'>
 					<h1 class='text-2xl font-semibold p-3 lg:text-3xl'>Cart</h1>
 				</div>
-				<Show when={data.cartItemsData() && data.productsData()}>
-					<CartPage cartItems={data.cartItemsData()} products={data.productsData()} />
+				<Show when={data.cartItems() && data.products()}>
+					<CartPage />
 				</Show>
 			</main>
 		</>

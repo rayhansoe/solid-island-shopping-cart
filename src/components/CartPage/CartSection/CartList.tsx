@@ -1,18 +1,10 @@
 /* eslint-disable solid/reactivity */
-import type { CartItem, Product } from "@prisma/client";
-import { createResource, For, Show } from "solid-js";
-import server$ from "solid-start/server";
+import { For, Show } from "solid-js";
 import CartContext from "~/context/CartContext";
 import ProductContext from "~/context/ProductContext";
 import { formatCurrency } from "~/utilities/formatCurrency";
-import { prisma } from "~/server/db/client";
 
-type CartListProps = {
-	products: Product[] | undefined;
-	cartItems: CartItem[] | undefined;
-};
-
-export default function CartList(props: CartListProps) {
+export default function CartList() {
 	const {
 		cartItems,
 		handleIncreaseCartItem,
@@ -21,45 +13,19 @@ export default function CartList(props: CartListProps) {
 		handleSetCartItemQuantityByCartItemId,
 	} = CartContext;
 
-	const [productsData] = createResource<Product[]>(
-		server$(async () => {
-			const { setProducts } = ProductContext;
-			const data = await prisma.product.findMany();
-			data && setProducts(data);
-
-			return data;
-		}),
-		{
-			deferStream: true,
-			initialValue: props.products,
-		}
-	);
-
-	const [cartItemsData, { refetch }] = createResource<CartItem[]>(
-		server$(async () => {
-			const { setCartItems } = CartContext;
-			const data = await prisma.cartItem.findMany();
-			data && setCartItems(data);
-
-			return data;
-		}),
-		{
-			deferStream: true,
-			initialValue: props.cartItems,
-		}
-	);
+	const { products } = ProductContext;
 
 	return (
-		<Show when={cartItemsData()?.length}>
-			<For each={cartItemsData()}>
+		<Show when={cartItems()?.length}>
+			<For each={cartItems()}>
 				{(item) => (
 					<div class='flex flex-col'>
 						<li class='flex justify-between gap-2 p-3 w-full sm:gap-4'>
 							{/* Product Image */}
 							<img
 								class='w-2/5 h-28 object-cover rounded sm:h-32'
-								src={productsData()?.find((product) => product.id === item.productId)?.imgUrl}
-								alt={productsData()?.find((product) => product.id === item.productId)?.name}
+								src={products()?.find((product) => product.id === item.productId)?.imgUrl}
+								alt={products()?.find((product) => product.id === item.productId)?.name}
 							/>
 							<div class='flex flex-col w-3/5 justify-between items-end'>
 								{/* top side */}
@@ -68,7 +34,7 @@ export default function CartList(props: CartListProps) {
 									<div class='flex flex-col sm:gap-3'>
 										<span class='flex items-center gap-1 font-medium sm:text-xl'>
 											{/* Product Name */}
-											{productsData()?.find((product) => product.id === item.productId)?.name}
+											{products()?.find((product) => product.id === item.productId)?.name}
 											<Show when={item.quantity > 1}>
 												<span class='text-xs text-gray-600 ml-1 sm:text-sm sm:ml-0'>
 													{`x ${item.quantity}`}
@@ -78,7 +44,7 @@ export default function CartList(props: CartListProps) {
 										{/* Product Price */}
 										<span class='text-sm text-gray-600 sm:text-base'>
 											{formatCurrency(
-												productsData()?.find((product) => product.id === item.productId)?.price || 0
+												products()?.find((product) => product.id === item.productId)?.price || 0
 											)}
 										</span>
 									</div>
@@ -86,8 +52,8 @@ export default function CartList(props: CartListProps) {
 									{/* Right Side && Total Price / Product */}
 									<span class='font-medium h-min sm:text-xl'>
 										{formatCurrency(
-											(productsData()?.find((product) => product.id === item.productId)?.price ||
-												0) * item.quantity
+											(products()?.find((product) => product.id === item.productId)?.price || 0) *
+												item.quantity
 										)}
 									</span>
 								</div>
@@ -102,10 +68,11 @@ export default function CartList(props: CartListProps) {
 									<Show when={item.quantity}>
 										<div class='flex items-center gap-2 mb-2'>
 											<button
-												onClick={async () => {
-													await handleRemoveCartItem(item.productId);
-													await refetch();
-												}}
+												// onClick={async () => {
+												// 	await handleRemoveCartItem(item.productId);
+												// 	await refetch();
+												// }}
+												onClick={[handleRemoveCartItem, item.productId]}
 												class='flex items-center justify-center text-gray-400 hover:text-red-400 group'
 											>
 												<svg
@@ -141,10 +108,7 @@ export default function CartList(props: CartListProps) {
 											<div class='flex items-center gap-2'>
 												<button
 													disabled={item.quantity ? false : true}
-													onClick={async () => {
-														await handleDecreaseCartItem(item.productId);
-														await refetch();
-													}}
+													onClick={[handleDecreaseCartItem, item.productId]}
 													class='flex items-center justify-center rounded-full w-5 h-5 bg-red-300 text-xl font-bold text-white hover:bg-red-400 active:bg-red-300 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed sm:w-7 sm:h-7'
 												>
 													<svg
@@ -164,36 +128,31 @@ export default function CartList(props: CartListProps) {
 												<input
 													class='custom-input-number text-xs text-center flex items-center justify-center sm:text-lg'
 													value={item.quantity || 0}
-													onInput={async (e) => {
-														await handleSetCartItemQuantityByCartItemId(
+													onInput={(e) => {
+														handleSetCartItemQuantityByCartItemId(
 															item.id,
 															parseInt(e.currentTarget.value)
 														);
-														await refetch();
 														e.currentTarget.value = String(
-															cartItemsData()?.find((cartItem) => cartItem.id === item.id)?.quantity
+															cartItems()?.find((cartItem) => cartItem.id === item.id)?.quantity
 														);
 													}}
 													size={String(item.quantity || 0).length}
 													type='number'
 													min={0}
 													max={
-														productsData()?.find((product) => product.id === item.productId)
-															?.stock || 0
+														products()?.find((product) => product.id === item.productId)?.stock || 0
 													}
 												/>
 
 												<button
 													disabled={
 														cartItems()?.find((item) => item.productId === item.id)?.quantity ===
-														productsData()?.find((product) => product.id === item.productId)?.stock
+														products()?.find((product) => product.id === item.productId)?.stock
 															? true
 															: false
 													}
-													onClick={async () => {
-														await handleIncreaseCartItem(item.productId);
-														await refetch();
-													}}
+													onClick={[handleIncreaseCartItem, item.productId]}
 													class='flex items-center justify-center rounded-full w-5 h-5 bg-blue-500 text-xl font-bold text-white hover:bg-blue-400 active:bg-blue-300 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed sm:w-7 sm:h-7'
 												>
 													<svg

@@ -4,9 +4,17 @@ import server$ from "solid-start/server";
 import { prisma } from "~/server/db/client";
 import productContext from "./ProductContext";
 
+const loadProduct = server$(async () => {
+	const cartItems = await prisma.cartItem.findMany();
+
+	return cartItems;
+});
+
+const data = await loadProduct();
+
 function createCartContext() {
 	const { getProduct } = productContext;
-	const [cartItems, setCartItems] = createSignal<CartItem[]>([]);
+	const [cartItems, setCartItems] = createSignal<CartItem[]>(data || []);
 
 	const loadCart = server$(async () => {
 		const cartItems = await prisma.cartItem.findMany({ where: { status: true } });

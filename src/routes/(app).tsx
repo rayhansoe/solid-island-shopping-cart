@@ -7,12 +7,11 @@ import CartContext from "~/context/CartContext";
 import { prisma } from "~/server/db/client";
 
 export function routeData() {
-	return createServerData$(
-		async () => {
-			const { setCartItems } = CartContext;
+	const { setCartItems } = CartContext;
 
+	const cartItems = createServerData$(
+		async () => {
 			const data = await prisma.cartItem.findMany();
-			setCartItems(data);
 
 			return data;
 		},
@@ -20,6 +19,11 @@ export function routeData() {
 			deferStream: true,
 		}
 	);
+
+	const data = cartItems();
+	data && setCartItems(data);
+
+	return cartItems;
 }
 
 const App: VoidComponent = () => {

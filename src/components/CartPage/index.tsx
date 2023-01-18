@@ -1,18 +1,12 @@
-import type { CartItem, Product } from "@prisma/client";
 import CartSection from "./CartSection";
 import SummarySection from "./SummarySection/(SummarySection)";
 
-type CartPageProps = {
-	products: Product[] | undefined;
-	cartItems: CartItem[] | undefined;
-};
-
-export default function CartPage(props: CartPageProps) {
+export default function CartPage() {
 	return (
 		<div class='relative flex h-full flex-col gap-4 md:flex-row md:gap-8 lg:gap-14'>
 			{/* Cart */}
 			<ul class='parent-island container flex flex-col items-center md:w-3/5 lg:w-2/3'>
-				<CartSection cartItems={props.cartItems} products={props.products} />
+				<CartSection />
 			</ul>
 
 			{/* Summary Cart */}
