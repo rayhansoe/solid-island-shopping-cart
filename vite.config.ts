@@ -10,7 +10,7 @@ export default defineConfig(() => {
 				islands: true,
 				islandsRouter: true,
 				ssr: true,
-				adapter: vercel({ edge: false }),
+				adapter: vercel({ edge: true }),
 			}),
 		],
 	};
