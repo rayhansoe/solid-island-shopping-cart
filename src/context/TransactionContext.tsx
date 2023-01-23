@@ -4,19 +4,28 @@ import server$ from "solid-start/server";
 import { prisma } from "~/server/db/client";
 import CartContext from "./CartContext";
 
-function createProductContext() {
-	const [transactions, setTransactions] = createSignal<Transaction[]>();
-	const [transactionItems, setTransactionItems] = createSignal<TransactionItem[]>();
+function createTransactionContext() {
+	const [transactions, setTransactions] = createSignal<Transaction[]>([]);
+	const [transactionItems, setTransactionItems] = createSignal<TransactionItem[]>([]);
 	const { setCartItems } = CartContext;
 
 	const createTransaction = server$(async () => {
 		try {
 			const cartItems = await prisma.cartItem.findMany();
+			const products = await prisma.product.findMany();
+			const totalPrice =
+				cartItems?.reduce(
+					(totalPrice, cartItem) =>
+						cartItem.quantity *
+							Number(products?.find((item) => item.id === cartItem.productId)?.price || 0) +
+						totalPrice,
+					0
+				) || 0;
 			if (!cartItems.length) {
 				throw new Error("there is no item in cart right now.");
 			}
 			const newTransaction = await prisma.transaction.create({
-				data: { createdAt: new Date(), updatedAt: new Date() },
+				data: { createdAt: new Date(), updatedAt: new Date(), totalPrice },
 			});
 			if (!newTransaction) {
 				throw new Error("failed to proceed this transaction, please try again!");
@@ -35,6 +44,16 @@ function createProductContext() {
 			});
 
 			const newTransactionItems = await prisma.transactionItem.findMany();
+
+			cartItems?.forEach(async (item) => {
+				const product = await prisma.product.findUnique({ where: { id: item.productId } });
+				if (product?.stock && product.popularity) {
+					await prisma.product.update({
+						where: { id: item.productId },
+						data: { stock: product.stock - item.quantity, popularity: product.popularity + 5 },
+					});
+				}
+			});
 
 			if (!newTransactionItems) {
 				throw new Error("failed to create new transaction Items record, please try again!");
@@ -65,4 +84,4 @@ function createProductContext() {
 		handleCreateTransaction,
 	};
 }
-export default createRoot(createProductContext);
+export default createRoot(createTransactionContext);
