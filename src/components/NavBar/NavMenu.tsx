@@ -11,6 +11,9 @@ const NavMenu = () => {
 			<li>
 				<NavItem path='/cart'>Cart</NavItem>
 			</li>
+			<li>
+				<NavItem path='/transaction'>Transaction</NavItem>
+			</li>
 		</ul>
 	);
 };
