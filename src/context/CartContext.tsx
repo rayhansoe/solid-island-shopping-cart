@@ -4,13 +4,13 @@ import server$ from "solid-start/server";
 import { prisma } from "~/server/db/client";
 import productContext from "./ProductContext";
 
-const loadProduct = server$(async () => {
+const loadProduct$ = server$(async () => {
 	const cartItems = await prisma.cartItem.findMany();
 
 	return cartItems;
 });
 
-const data = await loadProduct();
+const data = await loadProduct$();
 
 function createCartContext() {
 	const { getProduct } = productContext;
@@ -25,6 +25,13 @@ function createCartContext() {
 	const increaseCartItem = server$(async (id: string) => {
 		const product = await prisma.product.findUnique({ where: { id } });
 		const item = await prisma.cartItem.findFirst({ where: { productId: id } });
+
+		if (product?.popularity) {
+			await prisma.product.update({
+				where: { id },
+				data: { popularity: product.popularity + 1 },
+			});
+		}
 
 		if (!item && product?.stock) {
 			await prisma.cartItem.create({
@@ -53,6 +60,14 @@ function createCartContext() {
 		const item = await prisma.cartItem.findFirst({
 			where: { productId: id },
 		});
+		const product = await prisma.product.findUnique({ where: { id } });
+
+		if (product?.popularity) {
+			await prisma.product.update({
+				where: { id },
+				data: { popularity: product.popularity + 1 },
+			});
+		}
 
 		if (item?.quantity === 1) {
 			await prisma.cartItem.delete({ where: { id: item?.id } });
@@ -79,8 +94,13 @@ function createCartContext() {
 		const item = await prisma.cartItem.findFirst({
 			where: { productId: data.id },
 		});
-		console.log(product?.name);
-		console.log(item?.quantity);
+
+		if (product?.popularity) {
+			await prisma.product.update({
+				where: { id: product.id },
+				data: { popularity: product.popularity + 1 },
+			});
+		}
 
 		if (Number.isNaN(data.quantity)) {
 			await prisma.cartItem.update({
@@ -124,8 +144,13 @@ function createCartContext() {
 				where: { id: data.id },
 			});
 			const product = await prisma.product.findUnique({ where: { id: item?.productId } });
-			console.log(product?.name);
-			console.log(item?.quantity);
+
+			if (product?.popularity) {
+				await prisma.product.update({
+					where: { id: product.id },
+					data: { popularity: product.popularity + 1 },
+				});
+			}
 
 			if (Number.isNaN(data.quantity)) {
 				await prisma.cartItem.update({
