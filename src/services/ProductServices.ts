@@ -3,6 +3,25 @@ import server$, { createServerData$ } from "solid-start/server";
 import { prisma } from "~/server/db/client";
 
 // CREATE
+
+// Create Product
+export const createProduct = async (productData: Product) => {
+	return await prisma.product.create({
+		data: {
+			...productData,
+		},
+		select: {
+			id: true,
+			name: true,
+			category: true,
+			stock: true,
+			price: true,
+			imgUrl: true,
+			popularity: true,
+		},
+	});
+};
+
 // Create Product
 export const createProduct$ = server$(async (productData: Product) => {
 	return await prisma.product.create({
@@ -22,6 +41,15 @@ export const createProduct$ = server$(async (productData: Product) => {
 });
 
 // Create Product Raw
+export const createProductRaw = async (productData: Product) => {
+	return await prisma.product.create({
+		data: {
+			...productData,
+		},
+	});
+};
+
+// Create Product Raw
 export const createProductRaw$ = server$(async (productData: Product) => {
 	return await prisma.product.create({
 		data: {
@@ -29,6 +57,26 @@ export const createProductRaw$ = server$(async (productData: Product) => {
 		},
 	});
 });
+
+// Create Products
+export const createManyProduct = async (productsData: Product[]) => {
+	return await productsData.map(async (product) => {
+		return await prisma.product.create({
+			data: {
+				...product,
+			},
+			select: {
+				id: true,
+				name: true,
+				category: true,
+				stock: true,
+				price: true,
+				imgUrl: true,
+				popularity: true,
+			},
+		});
+	});
+};
 
 // Create Products
 export const createManyProduct$ = server$(async (productsData: Product[]) => {
@@ -51,6 +99,17 @@ export const createManyProduct$ = server$(async (productsData: Product[]) => {
 });
 
 // Create Products Raw
+export const createManyProductRaw = async (productsData: Product[]) => {
+	return await productsData.map(async (product) => {
+		return await prisma.product.create({
+			data: {
+				...product,
+			},
+		});
+	});
+};
+
+// Create Products Raw
 export const createManyProductRaw$ = server$(async (productsData: Product[]) => {
 	return await productsData.map(async (product) => {
 		return await prisma.product.create({
@@ -62,6 +121,25 @@ export const createManyProductRaw$ = server$(async (productsData: Product[]) => 
 });
 
 // READ
+
+// get Products
+export const getProducts = async () => {
+	return await prisma.product.findMany({
+		orderBy: {
+			popularity: "desc",
+		},
+		select: {
+			id: true,
+			name: true,
+			category: true,
+			stock: true,
+			price: true,
+			imgUrl: true,
+			popularity: true,
+		},
+	});
+};
+
 // get Products
 export const getProducts$ = server$(async () => {
 	return await prisma.product.findMany({
@@ -79,6 +157,15 @@ export const getProducts$ = server$(async () => {
 		},
 	});
 });
+
+// get Products
+export const getProductsRaw = async () => {
+	return await prisma.product.findMany({
+		orderBy: {
+			popularity: "desc",
+		},
+	});
+};
 
 // get Products
 export const getProductsRaw$ = server$(async () => {
@@ -117,6 +204,22 @@ export const getServerProductsDataRaw$ = createServerData$(async () => {
 });
 
 // get Product
+export const getProduct = async (productId: string) => {
+	return await prisma.product.findUnique({
+		where: { id: productId },
+		select: {
+			id: true,
+			name: true,
+			category: true,
+			stock: true,
+			price: true,
+			imgUrl: true,
+			popularity: true,
+		},
+	});
+};
+
+// get Product
 export const getProduct$ = server$(async (productId: string) => {
 	return await prisma.product.findUnique({
 		where: { id: productId },
@@ -131,6 +234,13 @@ export const getProduct$ = server$(async (productId: string) => {
 		},
 	});
 });
+
+// get Product
+export const getProductRaw = async (productId: string) => {
+	return await prisma.product.findUnique({
+		where: { id: productId },
+	});
+};
 
 // get Product
 export const getProductRaw$ = server$(async (productId: string) => {
@@ -164,7 +274,26 @@ export const getServerProductDataRaw$ = createServerData$(async (productId: stri
 	});
 });
 
+// get Product Stock
+export const getProductStock = async (productId: string) => {
+	const product = await getProduct(productId);
+	return product?.stock;
+};
+
+// get Product Stock Server Function
+export const getProductStock$ = server$(async (productId: string) => {
+	const product = await getProduct$(productId);
+	return product?.stock;
+});
+
+// get Product Stock Server Resource
+export const getServerProductStockData$ = createServerData$(async (productId: string) => {
+	const product = await getProduct$(productId);
+	return product?.stock;
+});
+
 // UPDATE
+
 // Update Product Popularity Lite
 export const updateProductPopularityLite$ = server$(
 	async (productId: string, prevPopularity: number) => {
@@ -271,6 +400,26 @@ export const decreaseProductStockRaw$ = server$(
 );
 
 // Product re-Stock
+export const reStockProduct = async (productId: string) => {
+	return await prisma.product.update({
+		where: { id: productId },
+		data: {
+			stock: 9999,
+			updatedAt: new Date(),
+		},
+		select: {
+			id: true,
+			name: true,
+			category: true,
+			stock: true,
+			price: true,
+			imgUrl: true,
+			popularity: true,
+		},
+	});
+};
+
+// Product re-Stock
 export const reStockProduct$ = server$(async (productId: string) => {
 	return await prisma.product.update({
 		where: { id: productId },
@@ -289,6 +438,17 @@ export const reStockProduct$ = server$(async (productId: string) => {
 		},
 	});
 });
+
+// Product re-Stock Raw
+export const reStockProductRaw = async (productId: string) => {
+	return await prisma.product.update({
+		where: { id: productId },
+		data: {
+			stock: 9999,
+			updatedAt: new Date(),
+		},
+	});
+};
 
 // Product re-Stock Raw
 export const reStockProductRaw$ = server$(async (productId: string) => {
