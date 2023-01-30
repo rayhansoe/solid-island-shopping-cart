@@ -1,27 +1,21 @@
 import type { VoidComponent } from "solid-js";
+import { batch } from "solid-js";
 import { Show } from "solid-js";
 import { Outlet, useRouteData } from "solid-start";
-import { createServerData$ } from "solid-start/server";
 import NavBar from "~/components/NavBar";
 import CartContext from "~/context/CartContext";
-import { prisma } from "~/server/db/client";
+import { getServerCartItemsData$ } from "~/services/CartServices";
 
 export function routeData() {
 	const { setCartItems } = CartContext;
 
-	const cartItems = createServerData$(
-		async () => {
-			const data = await prisma.cartItem.findMany();
-
-			return data;
-		},
-		{
-			deferStream: true,
-		}
-	);
+	const cartItems = getServerCartItemsData$();
 
 	const data = cartItems();
-	data && setCartItems(data);
+
+	batch(() => {
+		data && setCartItems(data);
+	});
 
 	return cartItems;
 }

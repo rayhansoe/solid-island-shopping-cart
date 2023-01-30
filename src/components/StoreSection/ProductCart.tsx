@@ -1,4 +1,6 @@
-import { Match, Switch } from "solid-js";
+/* eslint-disable solid/reactivity */
+import { debounce } from "@solid-primitives/scheduled";
+import { batch, createSignal, Match, Switch } from "solid-js";
 import CartContext from "~/context/CartContext";
 
 type ProductCartProps = {
@@ -9,11 +11,40 @@ type ProductCartProps = {
 export default function ProductCart(props: ProductCartProps) {
 	const {
 		cartItems,
-		handleDecreaseCartItem,
+		setIsLoading,
 		handleIncreaseCartItem,
 		handleRemoveCartItem,
 		handleSetCartItemQuantityByProductId,
 	} = CartContext;
+
+	const [quantity, setQuantity] = createSignal<number>(
+		cartItems.find((item) => item.productId === props.id)?.quantity || 0
+	);
+
+	const inputUpdate = (productId: string) => {
+		handleSetCartItemQuantityByProductId(productId, quantity());
+	};
+
+	const incrementUpdate = (productId: string) => {
+		handleSetCartItemQuantityByProductId(productId, quantity());
+	};
+
+	const decrementUpdate = (productId: string) => {
+		handleSetCartItemQuantityByProductId(productId, quantity());
+	};
+
+	const update = (productId: string) => {
+		handleSetCartItemQuantityByProductId(productId, quantity());
+	};
+
+	const debouncedUpdate = debounce(update, 1000);
+
+	const debouncedInputUpdate = debounce(inputUpdate, 1000);
+
+	const debouncedIncrementUpdate = debounce(incrementUpdate, 1000);
+
+	const debouncedDecrementUpdate = debounce(decrementUpdate, 1000);
+
 	return (
 		<>
 			<Switch
@@ -29,8 +60,7 @@ export default function ProductCart(props: ProductCartProps) {
 			>
 				<Match
 					when={
-						cartItems()?.length &&
-						cartItems()?.find((item) => item.productId === props.id)?.quantity
+						cartItems?.length && cartItems?.find((item) => item.productId === props.id)?.quantity
 					}
 				>
 					<div class='flex items-center gap-2 h-10'>
@@ -71,9 +101,21 @@ export default function ProductCart(props: ProductCartProps) {
 						<div class='flex items-center gap-2'>
 							<button
 								disabled={
-									cartItems()?.find((item) => item.productId === props.id)?.quantity ? false : true
+									cartItems?.find((item) => item.productId === props.id)?.quantity !== 1
+										? false
+										: true
 								}
-								onClick={() => handleDecreaseCartItem(props.id)}
+								onClick={() => {
+									batch(() => {
+										setQuantity((q) => q - 1);
+										setIsLoading(true);
+									});
+									// debouncedDecrementUpdate(props.id, );
+									debouncedUpdate(props.id);
+								}}
+								onKeyUp={(e) => {
+									e.preventDefault();
+								}}
 								class='flex items-center justify-center rounded-full w-7 h-7 bg-red-300 text-xl font-bold text-white hover:bg-red-400 active:bg-red-300 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed'
 							>
 								<svg
@@ -92,15 +134,24 @@ export default function ProductCart(props: ProductCartProps) {
 
 							<input
 								class='custom-input-number text-center flex items-center justify-center'
-								value={cartItems()?.find((item) => item.productId === props.id)?.quantity || 0}
+								value={
+									quantity() ||
+									cartItems?.find((item) => item.productId === props.id)?.quantity ||
+									0
+								}
 								onInput={(e) => {
-									handleSetCartItemQuantityByProductId(props.id, parseInt(e.currentTarget.value));
-									e.currentTarget.value = String(
-										cartItems()?.find((item) => item.productId === props.id)?.quantity
-									);
+									batch(() => {
+										setQuantity(parseInt(e.currentTarget.value));
+										setIsLoading(true);
+									});
+									// debouncedInputUpdate(props.id, );
+									debouncedUpdate(props.id);
+								}}
+								onKeyUp={(e) => {
+									e.preventDefault();
 								}}
 								size={
-									String(cartItems()?.find((item) => item.productId === props.id)?.quantity || 0)
+									String(cartItems?.find((item) => item.productId === props.id)?.quantity || 0)
 										.length
 								}
 								type='number'
@@ -110,11 +161,21 @@ export default function ProductCart(props: ProductCartProps) {
 
 							<button
 								disabled={
-									cartItems()?.find((item) => item.productId === props.id)?.quantity === props.stock
+									cartItems?.find((item) => item.productId === props.id)?.quantity === props.stock
 										? true
 										: false
 								}
-								onClick={() => handleIncreaseCartItem(props.id)}
+								onClick={() => {
+									batch(() => {
+										setQuantity((q) => q + 1);
+										setIsLoading(true);
+									});
+									// debouncedIncrementUpdate(props.id, );
+									debouncedUpdate(props.id);
+								}}
+								onKeyUp={(e) => {
+									e.preventDefault();
+								}}
 								class='flex items-center justify-center rounded-full w-7 h-7 bg-blue-500 text-xl font-bold text-white hover:bg-blue-400 active:bg-blue-300 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed'
 							>
 								<svg
@@ -135,8 +196,7 @@ export default function ProductCart(props: ProductCartProps) {
 				</Match>
 				<Match
 					when={
-						!cartItems()?.length &&
-						!cartItems()?.find((item) => item.productId === props.id)?.quantity
+						!cartItems?.length && !cartItems?.find((item) => item.productId === props.id)?.quantity
 					}
 				>
 					<button

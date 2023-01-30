@@ -7,7 +7,7 @@ const CartList = unstable_island(() => import("./CartList"));
 export default function CartSection() {
 	const { cartItems } = CartContext;
 	return (
-		<Show when={cartItems()?.length}>
+		<Show when={cartItems?.length}>
 			<CartList />
 		</Show>
 	);

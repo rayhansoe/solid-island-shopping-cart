@@ -1,78 +1,100 @@
 import type { Transaction, TransactionItem } from "@prisma/client";
-import { createRoot, createSignal } from "solid-js";
+import { batch, createRoot, createSignal } from "solid-js";
 import server$ from "solid-start/server";
-import { prisma } from "~/server/db/client";
+import { getCartItems$, removeCartItems$ } from "~/services/CartServices";
+import { decreaseProductStock$ } from "~/services/ProductServices";
+import { createTransaction$, createTransactionItem$ } from "~/services/TransactionServices";
 import CartContext from "./CartContext";
 
 function createTransactionContext() {
 	const [transactions, setTransactions] = createSignal<Transaction[]>([]);
 	const [transactionItems, setTransactionItems] = createSignal<TransactionItem[]>([]);
-	const { setCartItems } = CartContext;
+	const { setCartItems, setIsSubmitting, setIsLoading } = CartContext;
 
-	const createTransaction = server$(async () => {
+	const logNew = server$(() => {
+		console.log("Start");
+	});
+
+	const log = server$((text: string) => {
+		console.log(`Log: ${text}`);
+	});
+
+	const logEnd = server$(() => {
+		console.log("End");
+	});
+
+	const createTransaction = async () => {
 		try {
-			const cartItems = await prisma.cartItem.findMany();
-			const products = await prisma.product.findMany();
-			const totalPrice =
-				cartItems?.reduce(
-					(totalPrice, cartItem) =>
-						cartItem.quantity *
-							Number(products?.find((item) => item.id === cartItem.productId)?.price || 0) +
-						totalPrice,
-					0
-				) || 0;
+			setIsSubmitting(true);
+			await logNew();
+			const cartItems = await getCartItems$();
+			await log("get cart items");
+
 			if (!cartItems.length) {
+				batch(() => {
+					setIsLoading(false);
+					setIsSubmitting(false);
+				});
 				throw new Error("there is no item in cart right now.");
 			}
-			const newTransaction = await prisma.transaction.create({
-				data: { createdAt: new Date(), updatedAt: new Date(), totalPrice },
-			});
+
+			const newTransaction = await createTransaction$();
+			await log("create new transaction");
+
 			if (!newTransaction) {
+				batch(() => {
+					setIsLoading(false);
+					setIsSubmitting(false);
+				});
 				throw new Error("failed to proceed this transaction, please try again!");
 			}
 
-			cartItems.forEach(async (item) => {
-				await prisma.transactionItem.create({
-					data: {
-						createdAt: new Date(),
-						updatedAt: new Date(),
-						quantity: item.quantity,
-						productId: item.productId,
-						transactionId: newTransaction.id,
-					},
-				});
-			});
-
-			const newTransactionItems = await prisma.transactionItem.findMany();
+			const newTransactionItems = await createTransactionItem$(newTransaction.id);
+			await log("create new transaction items");
 
 			cartItems?.forEach(async (item) => {
-				const product = await prisma.product.findUnique({ where: { id: item.productId } });
-				if (product?.stock && product.popularity) {
-					await prisma.product.update({
-						where: { id: item.productId },
-						data: { stock: product.stock - item.quantity, popularity: product.popularity + 5 },
-					});
-				}
+				await decreaseProductStock$(item.productId, item.quantity);
 			});
+			// await decreaseProductsStockExperimental$(cartItems);
+			// await log("decrease products stock");
 
 			if (!newTransactionItems) {
+				batch(() => {
+					setIsLoading(false);
+					setIsSubmitting(false);
+				});
 				throw new Error("failed to create new transaction Items record, please try again!");
 			}
 
-			await prisma.cartItem.deleteMany();
+			// cartItems.forEach(async (item) => {
+			// 	await removeCartItem$(item.id);
+			// });
+			await removeCartItems$();
+			await log("remove cart items");
 
-			const newCartItems = await prisma.cartItem.findMany();
+			const newCartItems = await getCartItems$();
+			await log("get new cart items");
 
 			if (newCartItems.length) {
+				batch(() => {
+					setIsLoading(false);
+					setIsSubmitting(false);
+				});
 				throw new Error("failed to create new transaction Items record, please try again!");
 			}
+
+			await logEnd();
 		} catch (error) {
+			batch(() => {
+				setIsLoading(false);
+				setIsSubmitting(false);
+			});
 			console.error(error);
 		}
-	});
+	};
 
-	const handleCreateTransaction = async () => {
-		await createTransaction();
+	const handleCreateTransaction = () => {
+		createTransaction();
 		setCartItems([]);
 	};
 

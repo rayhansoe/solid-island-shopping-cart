@@ -1,12 +1,13 @@
 import { Meta, Title, useRouteData } from "solid-start";
 import type { VoidComponent } from "solid-js";
+import { batch } from "solid-js";
 import { Show } from "solid-js";
-import { createServerData$ } from "solid-start/server";
 
-import { prisma } from "~/server/db/client";
 import CartContext from "~/context/CartContext";
 import ProductContext from "~/context/ProductContext";
 import StoreSection from "~/components/StoreSection";
+import { getServerProductsData$ } from "~/services/ProductServices";
+import { getServerCartItemsData$ } from "~/services/CartServices";
 
 export const dataDump = [
 	{
@@ -125,33 +126,17 @@ export function routeData() {
 	const { setProducts } = ProductContext;
 	const { setCartItems } = CartContext;
 
-	const products = createServerData$(
-		async () => {
-			const data = await prisma.product.findMany();
+	const products = getServerProductsData$();
 
-			return data;
-		},
-		{
-			deferStream: true,
-		}
-	);
-
-	const cartItems = createServerData$(
-		async () => {
-			const data = await prisma.cartItem.findMany();
-
-			return data;
-		},
-		{
-			deferStream: true,
-		}
-	);
+	const cartItems = getServerCartItemsData$();
 
 	const cartItemsData = cartItems();
 	const productsData = products();
 
-	cartItemsData && setCartItems(cartItemsData);
-	productsData && setProducts(productsData);
+	batch(() => {
+		cartItemsData && setCartItems(cartItemsData);
+		productsData && setProducts(productsData);
+	});
 
 	return { products, cartItems };
 }

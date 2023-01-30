@@ -1,27 +1,21 @@
-import type { Product } from "@prisma/client";
-import { createRoot, createSignal } from "solid-js";
-import server$ from "solid-start/server";
-import { prisma } from "~/server/db/client";
+import { createRoot } from "solid-js";
+import { createStore } from "solid-js/store";
+import { getProducts$ } from "~/services/ProductServices";
+import type { ProductProps } from "~/types";
 
-const loadProduct = server$(async () => {
-	const products = await prisma.product.findMany();
-
-	return products;
-});
-
-const data = await loadProduct();
+const data: ProductProps[] = await getProducts$();
 
 function createProductContext() {
-	const [products, setProducts] = createSignal<Product[]>(data || []);
+	const [products, setProducts] = createStore<ProductProps[]>(data || []);
 
 	// const [productsResource, { refetch }] = createResource(loadProducts);
 
-	const getProduct = (id: string) => products()?.find((product) => product.id === id);
+	const getProductClient = (id: string) => products?.find((product) => product.id === id);
 
-	const getStockItem = (id: string) => products()?.find((product) => product.id === id)?.stock;
+	const getStockItemClient = (id: string) => products?.find((product) => product.id === id)?.stock;
 
 	// createEffect(() => productsResource() && setProducts(productsResource()));
 
-	return { products, setProducts, getProduct, getStockItem };
+	return { products, setProducts, getProductClient, getStockItemClient };
 }
 export default createRoot(createProductContext);

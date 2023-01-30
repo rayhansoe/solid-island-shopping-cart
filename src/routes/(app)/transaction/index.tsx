@@ -1,4 +1,4 @@
-import { For, Show } from "solid-js";
+import { batch, For, Show } from "solid-js";
 import { useRouteData } from "solid-start";
 import { createServerData$ } from "solid-start/server";
 import ProductContext from "~/context/ProductContext";
@@ -43,9 +43,11 @@ export function routeData() {
 	const transactionItemsData = transactionItems();
 	const productsData = products();
 
-	transactionsData && setTransactions(transactionsData);
-	transactionItemsData && setTransactionItems(transactionItemsData);
-	productsData && setProducts(productsData);
+	batch(() => {
+		transactionsData && setTransactions(transactionsData);
+		transactionItemsData && setTransactionItems(transactionItemsData);
+		productsData && setProducts(productsData);
+	});
 
 	return { transactions, transactionItems, products };
 }

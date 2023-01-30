@@ -27,6 +27,7 @@
 	},
 	"dependencies": {
 		"@prisma/client": "^4.9.0",
+		"@solid-primitives/scheduled": "^1.2.1",
 		"@solidjs/meta": "^0.28.2",
 		"@solidjs/router": "^0.7.0",
 		"solid-js": "^1.6.9",

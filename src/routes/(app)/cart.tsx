@@ -1,48 +1,34 @@
-import { Show } from "solid-js";
-import { createServerData$ } from "solid-start/server";
+import { batch, Show } from "solid-js";
 import { Meta, Title, useRouteData } from "solid-start";
 
-import { prisma } from "~/server/db/client";
 import CartContext from "~/context/CartContext";
 import ProductContext from "~/context/ProductContext";
 import CartPage from "~/components/CartPage";
+import { getServerProductsData$ } from "~/services/ProductServices";
+import { getServerCartItemsData$ } from "~/services/CartServices";
+import { createServerMultiAction$ } from "solid-start/server";
 
 export function routeData() {
 	const { setProducts } = ProductContext;
 	const { setCartItems } = CartContext;
-	const products = createServerData$(
-		async () => {
-			const data = await prisma.product.findMany();
+	const products = getServerProductsData$();
 
-			return data;
-		},
-		{
-			deferStream: true,
-		}
-	);
-
-	const cartItems = createServerData$(
-		async () => {
-			const data = await prisma.cartItem.findMany();
-
-			return data;
-		},
-		{
-			deferStream: true,
-		}
-	);
+	const cartItems = getServerCartItemsData$();
 
 	const cartItemsData = cartItems();
 	const productsData = products();
 
-	cartItemsData && setCartItems(cartItemsData);
-	productsData && setProducts(productsData);
+	batch(() => {
+		cartItemsData && setCartItems(cartItemsData);
+		productsData && setProducts(productsData);
+	});
 
 	return { products, cartItems };
 }
 
 function cart() {
-	const data = useRouteData<typeof routeData>();
+	const { cartItems, products } = useRouteData<typeof routeData>();
+	createServerMultiAction$;
 	return (
 		<>
 			<Title>Cart Page</Title>
@@ -51,7 +37,7 @@ function cart() {
 				<div class='flex items-center gap-2'>
 					<h1 class='text-2xl font-semibold p-3 lg:text-3xl'>Cart</h1>
 				</div>
-				<Show when={data.cartItems() && data.products()}>
+				<Show when={cartItems() && products()}>
 					<CartPage />
 				</Show>
 			</main>

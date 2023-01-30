@@ -1,10 +1,10 @@
-import type { Product } from "@prisma/client";
 import { unstable_island } from "solid-start";
+import type { ProductProps } from "~/types";
 import { formatCurrency } from "~/utilities/formatCurrency";
 
 const ProductCart = unstable_island(() => import("./ProductCart"));
 
-const ProductCard = (props: Product) => {
+const ProductCard = (props: ProductProps) => {
 	return (
 		<li class='relative flex flex-shrink-0 flex-grow-0 flex-col items-center w-full h-full min-w-0 p-3 md:w-1/2 md:max-w-sm lg:w-1/3 lg:max-w-none xl:w-1/4'>
 			<div class='relative flex flex-shrink-0 flex-grow-0 flex-col items-center w-full h-full min-w-0 shadow bg-white rounded border border-gray-300 overflow-hidden transition-all hover:shadow-lg sm:hover:scale-103 md:hover:scale-105'>
