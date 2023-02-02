@@ -1,6 +1,6 @@
 /* eslint-disable solid/reactivity */
 import { debounce } from "@solid-primitives/scheduled";
-import { batch, createSignal, Show } from "solid-js";
+import { batch, createEffect, createSignal, Show } from "solid-js";
 import CartContext from "~/context/CartContext";
 import ProductContext from "~/context/ProductContext";
 import type { CartItemProps } from "~/types";
@@ -8,16 +8,23 @@ import { formatCurrency } from "~/utilities/formatCurrency";
 
 export default function CartItem(props: CartItemProps) {
 	const [quantity, setQuantity] = createSignal<number>(props.quantity);
-	const { cartItems, setIsLoading, handleRemoveCartItem, handleSetCartItemQuantityByCartItemId } =
-		CartContext;
+	const {
+		cartItems,
+		setCartItems,
+		setIsLoading,
+		handleRemoveCartItem,
+		handleSetCartItemQuantityByCartItemId,
+	} = CartContext;
 
 	const { products } = ProductContext;
 
-	const update = (cartId: string) => {
-		handleSetCartItemQuantityByCartItemId(cartId, quantity());
+	const update = () => {
+		handleSetCartItemQuantityByCartItemId(props.id, quantity());
 	};
 
 	const debouncedUpdate = debounce(update, 1000);
+
+	createEffect(() => setQuantity(props.quantity));
 
 	return (
 		<div class='flex flex-col'>
@@ -38,7 +45,7 @@ export default function CartItem(props: CartItemProps) {
 								{products?.find((product) => product.id === props.productId)?.name}
 								<Show when={props.quantity > 1}>
 									<span class='text-xs text-gray-600 ml-1 sm:text-sm sm:ml-0'>
-										{`x ${props.quantity}`}
+										{`x ${quantity()}`}
 									</span>
 								</Show>{" "}
 							</span>
@@ -54,28 +61,22 @@ export default function CartItem(props: CartItemProps) {
 						<span class='font-medium h-min sm:text-xl'>
 							{formatCurrency(
 								(products?.find((product) => product.id === props.productId)?.price || 0) *
-									props.quantity
+									quantity()
 							)}
 						</span>
 					</div>
 
 					{/* bottom side */}
-					{/* <CartCardIsland
-									cartId={props.id}
-									productId={props.productId}
-									cartItemQuantity={props.quantity}
-								/> */}
 					<div class='flex'>
 						<Show when={props.quantity}>
 							<div class='flex items-center gap-2 mb-2'>
 								<button
-									// onClick={async () => {
-									// 	await handleRemoveCartItem(props.productId);
-									// 	await refetch();
-									// }}
 									onClick={() => {
-										setIsLoading(true);
 										handleRemoveCartItem(props.productId);
+										batch(() => {
+											setIsLoading(true);
+											setCartItems((items) => items.filter((item) => item.id !== props.id));
+										});
 									}}
 									class='flex items-center justify-center text-gray-400 hover:text-red-400 group'
 								>
@@ -111,15 +112,17 @@ export default function CartItem(props: CartItemProps) {
 								<span class='h-5 w-[1px] bg-gray-300' />
 								<div class='flex items-center gap-2'>
 									<button
-										disabled={props.quantity === 1 ? true : false}
-										// onClick={[handleDecreaseCartItem, item.productId]}
+										disabled={quantity() === 1 ? true : false}
 										onClick={() => {
 											batch(() => {
+												// setCartItems(
+												// 	(item) => item.id === props.id,
+												// 	produce((item) => (item.quantity = item.quantity - 1))
+												// );
 												setQuantity((q) => q - 1);
 												setIsLoading(true);
 											});
-											// debouncedDecrementUpdate(props.id, quantity());
-											debouncedUpdate(props.id);
+											debouncedUpdate();
 										}}
 										onKeyUp={(e) => {
 											e.preventDefault();
@@ -145,11 +148,14 @@ export default function CartItem(props: CartItemProps) {
 										value={quantity()}
 										onInput={(e) => {
 											batch(() => {
+												// setCartItems(
+												// 	(item) => item.id === props.id,
+												// 	produce((item) => (item.quantity = parseInt(e.currentTarget.value)))
+												// );
 												setQuantity(parseInt(e.currentTarget.value));
 												setIsLoading(true);
 											});
-											// debouncedInputUpdate(quantity(), props.id);
-											debouncedUpdate(props.id);
+											debouncedUpdate();
 										}}
 										onKeyUp={(e) => {
 											e.preventDefault();
@@ -167,14 +173,16 @@ export default function CartItem(props: CartItemProps) {
 												? true
 												: false
 										}
-										// onClick={[handleIncreaseCartItem, item.productId]}
 										onClick={() => {
 											batch(() => {
+												// setCartItems(
+												// 	(item) => item.id === props.id,
+												// 	produce((item) => (item.quantity = item.quantity + 1))
+												// );
 												setQuantity((q) => q + 1);
 												setIsLoading(true);
 											});
-											// debouncedIncrementUpdate(props.id, quantity());
-											debouncedUpdate(props.id);
+											debouncedUpdate();
 										}}
 										onKeyUp={(e) => {
 											e.preventDefault();

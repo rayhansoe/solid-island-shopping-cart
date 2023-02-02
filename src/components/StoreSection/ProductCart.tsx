@@ -1,6 +1,6 @@
 /* eslint-disable solid/reactivity */
 import { debounce } from "@solid-primitives/scheduled";
-import { batch, createSignal, Match, Switch } from "solid-js";
+import { batch, createEffect, createSignal, Match, Switch } from "solid-js";
 import CartContext from "~/context/CartContext";
 
 type ProductCartProps = {
@@ -11,39 +11,23 @@ type ProductCartProps = {
 export default function ProductCart(props: ProductCartProps) {
 	const {
 		cartItems,
+		getCartItemQuantityByProductId,
+		setCartItems,
 		setIsLoading,
 		handleIncreaseCartItem,
 		handleRemoveCartItem,
 		handleSetCartItemQuantityByProductId,
 	} = CartContext;
 
-	const [quantity, setQuantity] = createSignal<number>(
-		cartItems.find((item) => item.productId === props.id)?.quantity || 0
-	);
+	const [quantity, setQuantity] = createSignal<number>(getCartItemQuantityByProductId(props.id));
 
-	const inputUpdate = (productId: string) => {
-		handleSetCartItemQuantityByProductId(productId, quantity());
-	};
-
-	const incrementUpdate = (productId: string) => {
-		handleSetCartItemQuantityByProductId(productId, quantity());
-	};
-
-	const decrementUpdate = (productId: string) => {
-		handleSetCartItemQuantityByProductId(productId, quantity());
-	};
-
-	const update = (productId: string) => {
-		handleSetCartItemQuantityByProductId(productId, quantity());
+	const update = () => {
+		handleSetCartItemQuantityByProductId(props.id, quantity());
 	};
 
 	const debouncedUpdate = debounce(update, 1000);
 
-	const debouncedInputUpdate = debounce(inputUpdate, 1000);
-
-	const debouncedIncrementUpdate = debounce(incrementUpdate, 1000);
-
-	const debouncedDecrementUpdate = debounce(decrementUpdate, 1000);
+	createEffect(() => setQuantity(getCartItemQuantityByProductId(props.id)));
 
 	return (
 		<>
@@ -65,7 +49,13 @@ export default function ProductCart(props: ProductCartProps) {
 				>
 					<div class='flex items-center gap-2 h-10'>
 						<button
-							onClick={() => handleRemoveCartItem(props.id)}
+							onClick={() => {
+								handleRemoveCartItem(props.id);
+								batch(() => {
+									setIsLoading(true);
+									setCartItems((items) => items.filter((item) => item.productId !== props.id));
+								});
+							}}
 							class='flex items-center justify-center text-gray-400 hover:text-red-400 group'
 						>
 							<svg
@@ -100,18 +90,18 @@ export default function ProductCart(props: ProductCartProps) {
 						<span class='h-5 w-[1px] bg-gray-300' />
 						<div class='flex items-center gap-2'>
 							<button
-								disabled={
-									cartItems?.find((item) => item.productId === props.id)?.quantity !== 1
-										? false
-										: true
-								}
+								disabled={quantity() !== 1 ? false : true}
 								onClick={() => {
 									batch(() => {
+										// setCartItems(
+										// 	(item) => item.productId === props.id,
+										// 	produce((item) => (item.quantity = item.quantity - 1))
+										// );
 										setQuantity((q) => q - 1);
 										setIsLoading(true);
 									});
 									// debouncedDecrementUpdate(props.id, );
-									debouncedUpdate(props.id);
+									debouncedUpdate();
 								}}
 								onKeyUp={(e) => {
 									e.preventDefault();
@@ -134,18 +124,18 @@ export default function ProductCart(props: ProductCartProps) {
 
 							<input
 								class='custom-input-number text-center flex items-center justify-center'
-								value={
-									quantity() ||
-									cartItems?.find((item) => item.productId === props.id)?.quantity ||
-									0
-								}
+								value={quantity()}
 								onInput={(e) => {
 									batch(() => {
+										// setCartItems(
+										// 	(item) => item.productId === props.id,
+										// 	produce((item) => (item.quantity = parseInt(e.currentTarget.value)))
+										// );
 										setQuantity(parseInt(e.currentTarget.value));
 										setIsLoading(true);
 									});
 									// debouncedInputUpdate(props.id, );
-									debouncedUpdate(props.id);
+									debouncedUpdate();
 								}}
 								onKeyUp={(e) => {
 									e.preventDefault();
@@ -167,11 +157,15 @@ export default function ProductCart(props: ProductCartProps) {
 								}
 								onClick={() => {
 									batch(() => {
+										// setCartItems(
+										// 	(item) => item.productId === props.id,
+										// 	produce((item) => (item.quantity = item.quantity + 1))
+										// );
 										setQuantity((q) => q + 1);
 										setIsLoading(true);
 									});
 									// debouncedIncrementUpdate(props.id, );
-									debouncedUpdate(props.id);
+									debouncedUpdate();
 								}}
 								onKeyUp={(e) => {
 									e.preventDefault();

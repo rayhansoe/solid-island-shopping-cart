@@ -1,3 +1,5 @@
+import type { Prisma, PrismaClient } from "@prisma/client";
+
 export interface CartItemProps {
 	id: string;
 	quantity: number;
@@ -35,3 +37,9 @@ export interface TransactionItemProps {
 	updatedAt?: Date;
 	createdAt?: Date;
 }
+
+export type prismaType = PrismaClient<
+	Prisma.PrismaClientOptions,
+	never,
+	Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined
+>;

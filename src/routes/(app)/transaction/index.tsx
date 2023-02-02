@@ -1,46 +1,25 @@
 import { batch, For, Show } from "solid-js";
 import { useRouteData } from "solid-start";
-import { createServerData$ } from "solid-start/server";
 import ProductContext from "~/context/ProductContext";
 import TransactionContext from "~/context/TransactionContext";
-import { prisma } from "~/server/db/client";
+import { getServerProductsData$ } from "~/services/ProductServices";
+import {
+	getServerTransactionsData$,
+	getServerTransactionsItemsData$,
+} from "~/services/TransactionServices";
 
 export function routeData() {
 	const { setProducts } = ProductContext;
 	const { setTransactions, setTransactionItems } = TransactionContext;
 
-	const transactions = createServerData$(
-		async () => {
-			const data = await prisma.transaction.findMany();
-			return data;
-		},
-		{
-			deferStream: true,
-		}
-	);
+	const transactions = getServerTransactionsData$();
 
-	const transactionItems = createServerData$(
-		async () => {
-			const data = await prisma.transactionItem.findMany();
-			return data;
-		},
-		{
-			deferStream: true,
-		}
-	);
+	const transactionsItems = getServerTransactionsItemsData$();
 
-	const products = createServerData$(
-		async () => {
-			const data = await prisma.product.findMany();
-			return data;
-		},
-		{
-			deferStream: true,
-		}
-	);
+	const products = getServerProductsData$();
 
 	const transactionsData = transactions();
-	const transactionItemsData = transactionItems();
+	const transactionItemsData = transactionsItems();
 	const productsData = products();
 
 	batch(() => {
@@ -49,18 +28,20 @@ export function routeData() {
 		productsData && setProducts(productsData);
 	});
 
-	return { transactions, transactionItems, products };
+	return { transactions, transactionsItems, products };
 }
 
 export default function Page() {
-	const { transactions, transactionItems, products } = useRouteData<typeof routeData>();
+	const { transactions, transactionsItems, products } = useRouteData<typeof routeData>();
 	return (
-		<Show when={transactions()?.length && transactionItems()?.length && products()?.length}>
+		<Show when={transactions()?.length && transactionsItems()?.length && products()?.length}>
 			<For each={transactions()}>
 				{(transaction) => (
 					<details>
 						<summary>{JSON.stringify(transaction)}</summary>
-						<For each={transactionItems()?.filter((item) => item.transactionId === transaction.id)}>
+						<For
+							each={transactionsItems()?.filter((item) => item.transactionId === transaction.id)}
+						>
 							{(item) => (
 								<>
 									<p>

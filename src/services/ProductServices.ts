@@ -1,28 +1,28 @@
 import type { Product } from "@prisma/client";
 import server$, { createServerData$ } from "solid-start/server";
 import { prisma } from "~/server/db/client";
-import type { CartItemProps } from "~/types";
-import { getCartItems$ } from "./CartServices";
+import type { CartItemProps, prismaType } from "~/types";
+import { getCartItems, getCartItems$ } from "./CartServices";
 
 // CREATE
 
 // Create Product
-// export const createProduct = async (productData: Product) => {
-// 	return await prisma.product.create({
-// 		data: {
-// 			...productData,
-// 		},
-// 		select: {
-// 			id: true,
-// 			name: true,
-// 			category: true,
-// 			stock: true,
-// 			price: true,
-// 			imgUrl: true,
-// 			popularity: true,
-// 		},
-// 	});
-// };
+export const createProduct = async (prisma: prismaType, productData: Product) => {
+	return await prisma.product.create({
+		data: {
+			...productData,
+		},
+		select: {
+			id: true,
+			name: true,
+			category: true,
+			stock: true,
+			price: true,
+			imgUrl: true,
+			popularity: true,
+		},
+	});
+};
 
 // Create Product
 export const createProduct$ = server$(async (productData: Product) => {
@@ -43,13 +43,13 @@ export const createProduct$ = server$(async (productData: Product) => {
 });
 
 // Create Product Raw
-// export const createProductRaw = async (productData: Product) => {
-// 	return await prisma.product.create({
-// 		data: {
-// 			...productData,
-// 		},
-// 	});
-// };
+export const createProductRaw = async (prisma: prismaType, productData: Product) => {
+	return await prisma.product.create({
+		data: {
+			...productData,
+		},
+	});
+};
 
 // Create Product Raw
 export const createProductRaw$ = server$(async (productData: Product) => {
@@ -61,24 +61,24 @@ export const createProductRaw$ = server$(async (productData: Product) => {
 });
 
 // Create Products
-// export const createManyProduct = async (productsData: Product[]) => {
-// 	return await productsData.map(async (product) => {
-// 		return await prisma.product.create({
-// 			data: {
-// 				...product,
-// 			},
-// 			select: {
-// 				id: true,
-// 				name: true,
-// 				category: true,
-// 				stock: true,
-// 				price: true,
-// 				imgUrl: true,
-// 				popularity: true,
-// 			},
-// 		});
-// 	});
-// };
+export const createManyProduct = async (prisma: prismaType, productsData: Product[]) => {
+	return productsData.map(async (product) => {
+		return await prisma.product.create({
+			data: {
+				...product,
+			},
+			select: {
+				id: true,
+				name: true,
+				category: true,
+				stock: true,
+				price: true,
+				imgUrl: true,
+				popularity: true,
+			},
+		});
+	});
+};
 
 // Create Products
 export const createManyProduct$ = server$(async (productsData: Product[]) => {
@@ -101,15 +101,15 @@ export const createManyProduct$ = server$(async (productsData: Product[]) => {
 });
 
 // Create Products Raw
-// export const createManyProductRaw = async (productsData: Product[]) => {
-// 	return await productsData.map(async (product) => {
-// 		return await prisma.product.create({
-// 			data: {
-// 				...product,
-// 			},
-// 		});
-// 	});
-// };
+export const createManyProductRaw = async (prisma: prismaType, productsData: Product[]) => {
+	return productsData.map(async (product) => {
+		return await prisma.product.create({
+			data: {
+				...product,
+			},
+		});
+	});
+};
 
 // Create Products Raw
 export const createManyProductRaw$ = server$(async (productsData: Product[]) => {
@@ -125,22 +125,22 @@ export const createManyProductRaw$ = server$(async (productsData: Product[]) => 
 // READ
 
 // get Products
-// export const getProducts = async () => {
-// 	return await prisma.product.findMany({
-// 		orderBy: {
-// 			popularity: "desc",
-// 		},
-// 		select: {
-// 			id: true,
-// 			name: true,
-// 			category: true,
-// 			stock: true,
-// 			price: true,
-// 			imgUrl: true,
-// 			popularity: true,
-// 		},
-// 	});
-// };
+export const getProducts = async (prisma: prismaType) => {
+	return await prisma.product.findMany({
+		orderBy: {
+			popularity: "desc",
+		},
+		select: {
+			id: true,
+			name: true,
+			category: true,
+			stock: true,
+			price: true,
+			imgUrl: true,
+			popularity: true,
+		},
+	});
+};
 
 // get Products
 export const getProducts$ = server$(async () => {
@@ -161,13 +161,13 @@ export const getProducts$ = server$(async () => {
 });
 
 // get Products
-// export const getProductsRaw = async () => {
-// 	return await prisma.product.findMany({
-// 		orderBy: {
-// 			popularity: "desc",
-// 		},
-// 	});
-// };
+export const getProductsRaw = async (prisma: prismaType) => {
+	return await prisma.product.findMany({
+		orderBy: {
+			popularity: "desc",
+		},
+	});
+};
 
 // get Products
 export const getProductsRaw$ = server$(async () => {
@@ -218,20 +218,20 @@ export const getServerProductsDataRaw$ = () =>
 	);
 
 // get Product
-// export const getProduct = async (productId: string) => {
-// 	return await prisma.product.findUnique({
-// 		where: { id: productId },
-// 		select: {
-// 			id: true,
-// 			name: true,
-// 			category: true,
-// 			stock: true,
-// 			price: true,
-// 			imgUrl: true,
-// 			popularity: true,
-// 		},
-// 	});
-// };
+export const getProduct = async (prisma: prismaType, productId: string) => {
+	return await prisma.product.findUnique({
+		where: { id: productId },
+		select: {
+			id: true,
+			name: true,
+			category: true,
+			stock: true,
+			price: true,
+			imgUrl: true,
+			popularity: true,
+		},
+	});
+};
 
 // get Product
 export const getProduct$ = server$(async (productId: string) => {
@@ -250,11 +250,11 @@ export const getProduct$ = server$(async (productId: string) => {
 });
 
 // get Product
-// export const getProductRaw = async (productId: string) => {
-// 	return await prisma.product.findUnique({
-// 		where: { id: productId },
-// 	});
-// };
+export const getProductRaw = async (prisma: prismaType, productId: string) => {
+	return await prisma.product.findUnique({
+		where: { id: productId },
+	});
+};
 
 // get Product
 export const getProductRaw$ = server$(async (productId: string) => {
@@ -301,10 +301,10 @@ export const getServerProductDataRaw$ = () =>
 	);
 
 // get Product Stock
-// export const getProductStock = async (productId: string) => {
-// 	const product = await getProduct(productId);
-// 	return product?.stock;
-// };
+export const getProductStock = async (prisma: prismaType, productId: string) => {
+	const product = await getProduct(prisma, productId);
+	return product?.stock;
+};
 
 // get Product Stock Server Function
 export const getProductStock$ = server$(async (productId: string) => {
@@ -349,24 +349,28 @@ export const updateProductPopularityLite$ = server$(
 );
 
 // Update Product Popularity Lite
-// export const updateProductPopularityLite = async (productId: string, prevPopularity: number) => {
-// 	return await prisma.product.update({
-// 		where: { id: productId },
-// 		data: {
-// 			popularity: prevPopularity + 1,
-// 			updatedAt: new Date(),
-// 		},
-// 		select: {
-// 			id: true,
-// 			name: true,
-// 			category: true,
-// 			stock: true,
-// 			price: true,
-// 			imgUrl: true,
-// 			popularity: true,
-// 		},
-// 	});
-// };
+export const updateProductPopularityLite = async (
+	prisma: prismaType,
+	productId: string,
+	prevPopularity: number
+) => {
+	return await prisma.product.update({
+		where: { id: productId },
+		data: {
+			popularity: prevPopularity + 1,
+			updatedAt: new Date(),
+		},
+		select: {
+			id: true,
+			name: true,
+			category: true,
+			stock: true,
+			price: true,
+			imgUrl: true,
+			popularity: true,
+		},
+	});
+};
 
 // Update Product Popularity Lite Raw
 export const updateProductPopularityLiteRaw$ = server$(
@@ -382,15 +386,19 @@ export const updateProductPopularityLiteRaw$ = server$(
 );
 
 // Update Product Popularity Lite Raw
-// export const updateProductPopularityLiteRaw = async (productId: string, prevPopularity: number) => {
-// 	return await prisma.product.update({
-// 		where: { id: productId },
-// 		data: {
-// 			popularity: prevPopularity + 1,
-// 			updatedAt: new Date(),
-// 		},
-// 	});
-// };
+export const updateProductPopularityLiteRaw = async (
+	prisma: prismaType,
+	productId: string,
+	prevPopularity: number
+) => {
+	return await prisma.product.update({
+		where: { id: productId },
+		data: {
+			popularity: prevPopularity + 1,
+			updatedAt: new Date(),
+		},
+	});
+};
 
 // Update Product Popularity
 export const updateProductPopularity$ = server$(
@@ -415,24 +423,28 @@ export const updateProductPopularity$ = server$(
 );
 
 // Update Product Popularity
-// export const updateProductPopularity = async (productId: string, prevPopularity: number) => {
-// 	return await prisma.product.update({
-// 		where: { id: productId },
-// 		data: {
-// 			popularity: prevPopularity + 1,
-// 			updatedAt: new Date(),
-// 		},
-// 		select: {
-// 			id: true,
-// 			name: true,
-// 			category: true,
-// 			stock: true,
-// 			price: true,
-// 			imgUrl: true,
-// 			popularity: true,
-// 		},
-// 	});
-// };
+export const updateProductPopularity = async (
+	prisma: prismaType,
+	productId: string,
+	prevPopularity: number
+) => {
+	return await prisma.product.update({
+		where: { id: productId },
+		data: {
+			popularity: prevPopularity + 1,
+			updatedAt: new Date(),
+		},
+		select: {
+			id: true,
+			name: true,
+			category: true,
+			stock: true,
+			price: true,
+			imgUrl: true,
+			popularity: true,
+		},
+	});
+};
 
 // Update Product Popularity Raw
 export const updateProductPopularityRaw$ = server$(
@@ -448,15 +460,19 @@ export const updateProductPopularityRaw$ = server$(
 );
 
 // Update Product Popularity Raw
-// export const updateProductPopularityRaw = async (productId: string, prevPopularity: number) => {
-// 	return await prisma.product.update({
-// 		where: { id: productId },
-// 		data: {
-// 			popularity: prevPopularity + 1,
-// 			updatedAt: new Date(),
-// 		},
-// 	});
-// };
+export const updateProductPopularityRaw = async (
+	prisma: prismaType,
+	productId: string,
+	prevPopularity: number
+) => {
+	return await prisma.product.update({
+		where: { id: productId },
+		data: {
+			popularity: prevPopularity + 1,
+			updatedAt: new Date(),
+		},
+	});
+};
 
 // Decrease Product Stock
 export const decreaseProductStock$ = server$(async (productId: string, itemQuantity: number) => {
@@ -481,9 +497,10 @@ export const decreaseProductStock$ = server$(async (productId: string, itemQuant
 });
 
 // Decrease Product Stock
-export const decreaseProductsStockExperimental$ = server$(async (cartItems: CartItemProps[]) => {
-	cartItems.forEach(async (item: CartItemProps) => {
-		await prisma.product.update({
+export const decreaseProductsStockExperimental = async (prisma: prismaType) => {
+	const cartItems = await getCartItems(prisma);
+	return cartItems.map(async (item: CartItemProps) => {
+		return await prisma.product.update({
 			where: { id: item.productId },
 			data: {
 				stock: {
@@ -502,7 +519,7 @@ export const decreaseProductsStockExperimental$ = server$(async (cartItems: Cart
 			},
 		});
 	});
-});
+};
 
 // Decrease Products Stock
 export const decreaseProductsStock$ = server$(async () => {
@@ -531,28 +548,30 @@ export const decreaseProductsStock$ = server$(async () => {
 });
 
 // Decrease Product Stock
-// export const decreaseProductStock = async (
-// 	productId: string,
-// 	prevStock: number,
-// 	itemQuantity: number
-// ) => {
-// 	return await prisma.product.update({
-// 		where: { id: productId },
-// 		data: {
-// 			stock: prevStock - itemQuantity,
-// 			updatedAt: new Date(),
-// 		},
-// 		select: {
-// 			id: true,
-// 			name: true,
-// 			category: true,
-// 			stock: true,
-// 			price: true,
-// 			imgUrl: true,
-// 			popularity: true,
-// 		},
-// 	});
-// };
+export const decreaseProductStock = async (
+	prisma: prismaType,
+	productId: string,
+	itemQuantity: number
+) => {
+	return await prisma.product.update({
+		where: { id: productId },
+		data: {
+			stock: {
+				decrement: itemQuantity,
+			},
+			updatedAt: new Date(),
+		},
+		select: {
+			id: true,
+			name: true,
+			category: true,
+			stock: true,
+			price: true,
+			imgUrl: true,
+			popularity: true,
+		},
+	});
+};
 
 // Decrease Product Stock Raw
 export const decreaseProductStockRaw$ = server$(
@@ -570,39 +589,40 @@ export const decreaseProductStockRaw$ = server$(
 );
 
 // Decrease Product Stock Raw
-// export const decreaseProductStockRaw = async (
-// 	productId: string,
-// 	prevStock: number,
-// 	itemQuantity: number
-// ) => {
-// 	return await prisma.product.update({
-// 		where: { id: productId },
-// 		data: {
-// 			stock: prevStock - itemQuantity,
-// 			updatedAt: new Date(),
-// 		},
-// 	});
-// };
+export const decreaseProductStockRaw = async (
+	prisma: prismaType,
+	productId: string,
+	prevStock: number,
+	itemQuantity: number
+) => {
+	return await prisma.product.update({
+		where: { id: productId },
+		data: {
+			stock: prevStock - itemQuantity,
+			updatedAt: new Date(),
+		},
+	});
+};
 
 // Product re-Stock
-// export const reStockProduct = async (productId: string) => {
-// 	return await prisma.product.update({
-// 		where: { id: productId },
-// 		data: {
-// 			stock: 9999,
-// 			updatedAt: new Date(),
-// 		},
-// 		select: {
-// 			id: true,
-// 			name: true,
-// 			category: true,
-// 			stock: true,
-// 			price: true,
-// 			imgUrl: true,
-// 			popularity: true,
-// 		},
-// 	});
-// };
+export const reStockProduct = async (prisma: prismaType, productId: string) => {
+	return await prisma.product.update({
+		where: { id: productId },
+		data: {
+			stock: 9999,
+			updatedAt: new Date(),
+		},
+		select: {
+			id: true,
+			name: true,
+			category: true,
+			stock: true,
+			price: true,
+			imgUrl: true,
+			popularity: true,
+		},
+	});
+};
 
 // Product re-Stock
 export const reStockProduct$ = server$(async (productId: string) => {
@@ -625,15 +645,15 @@ export const reStockProduct$ = server$(async (productId: string) => {
 });
 
 // Product re-Stock Raw
-// export const reStockProductRaw = async (productId: string) => {
-// 	return await prisma.product.update({
-// 		where: { id: productId },
-// 		data: {
-// 			stock: 9999,
-// 			updatedAt: new Date(),
-// 		},
-// 	});
-// };
+export const reStockProductRaw = async (prisma: prismaType, productId: string) => {
+	return await prisma.product.update({
+		where: { id: productId },
+		data: {
+			stock: 9999,
+			updatedAt: new Date(),
+		},
+	});
+};
 
 // Product re-Stock Raw
 export const reStockProductRaw$ = server$(async (productId: string) => {
