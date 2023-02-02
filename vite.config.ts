@@ -10,8 +10,9 @@ export default defineConfig(() => {
 				islands: true,
 				islandsRouter: true,
 				ssr: true,
-				adapter: vercel({ edge: true }),
+				adapter: vercel({ edge: false }),
 			}),
 		],
+		ssr: { external: ["@prisma/client"] },
 	};
 });
